@@ -3,6 +3,9 @@
   "functions": {
     "api/mcp.ts": {
       "maxDuration": 10
+    },
+    "api/test-runtime.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
