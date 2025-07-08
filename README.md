@@ -2,18 +2,39 @@
 
 An MCP (Model Context Protocol) server that provides access to Enso documentation hosted on Mintlify, with integrated AI capabilities.
 
-## Quick Start - Remote Access (Recommended)
+## Quick Start - Remote Access (For All Developers)
 
 The Enso MCP server is deployed and available at: https://enso-mcp.vercel.app/api/mcp
 
-To connect from Cursor IDE:
+### Option 1: Direct GitHub Execution (Recommended)
 
-1. Install the MCP remote client globally:
+Add this to your `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "enso-docs": {
+      "command": "node",
+      "args": [
+        "-e",
+        "fetch('https://raw.githubusercontent.com/bezata/enso-mcp/main/mcp-remote-stdio.js').then(r=>r.text()).then(code=>eval(code))"
+      ],
+      "env": {
+        "MCP_REMOTE_URL": "https://enso-mcp.vercel.app/api/mcp"
+      }
+    }
+  }
+}
+```
+
+### Option 2: Using npm Package
+
+First, install globally:
 ```bash
 npm install -g @bezata/mcp-remote-client
 ```
 
-2. Add this to your `.cursor/mcp.json`:
+Then add this to your `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -25,19 +46,20 @@ npm install -g @bezata/mcp-remote-client
 }
 ```
 
-Or use npx (no installation required):
+### Option 3: Using npx (Auto-install)
+
 ```json
 {
   "mcpServers": {
     "enso-docs": {
       "command": "npx",
-      "args": ["-y", "@bezata/mcp-remote-client", "https://enso-mcp.vercel.app/api/mcp"]
+      "args": ["--yes", "@bezata/mcp-remote-client", "https://enso-mcp.vercel.app/api/mcp"]
     }
   }
 }
 ```
 
-3. Restart Cursor to connect to the Enso documentation server.
+After adding the configuration, restart Cursor to connect to the Enso documentation server.
 
 ## Features
 
