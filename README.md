@@ -2,6 +2,43 @@
 
 An MCP (Model Context Protocol) server that provides access to Enso documentation hosted on Mintlify, with integrated AI capabilities.
 
+## Quick Start - Remote Access (Recommended)
+
+The Enso MCP server is deployed and available at: https://enso-mcp.vercel.app/api/mcp
+
+To connect from Cursor IDE:
+
+1. Install the MCP remote client globally:
+```bash
+npm install -g @bezata/mcp-remote-client
+```
+
+2. Add this to your `.cursor/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "enso-docs": {
+      "command": "mcp-remote-client",
+      "args": ["https://enso-mcp.vercel.app/api/mcp"]
+    }
+  }
+}
+```
+
+Or use npx (no installation required):
+```json
+{
+  "mcpServers": {
+    "enso-docs": {
+      "command": "npx",
+      "args": ["-y", "@bezata/mcp-remote-client", "https://enso-mcp.vercel.app/api/mcp"]
+    }
+  }
+}
+```
+
+3. Restart Cursor to connect to the Enso documentation server.
+
 ## Features
 
 - 📚 Access Enso documentation through MCP protocol
@@ -10,10 +47,12 @@ An MCP (Model Context Protocol) server that provides access to Enso documentatio
 - 💾 Intelligent caching for performance
 - 🚀 Deploy on Vercel or run locally
 
-## Installation
+## Local Development Setup
+
+### Installation
 
 ```bash
-bun install
+npm install
 ```
 
 ## Local Development
@@ -25,15 +64,15 @@ cp .env.example .env.local
 
 2. Run in development mode:
 ```bash
-bun run dev
+npm run dev
 ```
 
 3. Build for production:
 ```bash
-bun run build
+npm run build
 ```
 
-## Configure in Cursor
+## Configure in Cursor (Local Server)
 
 1. Copy the example configuration:
 ```bash
@@ -48,8 +87,8 @@ cp .cursor/mcp.json.example .cursor/mcp.json
 {
   "mcpServers": {
     "enso-docs-local": {
-      "command": "bun",
-      "args": ["run", "/path/to/your/enso-mcp/dist/index.js"],
+      "command": "node",
+      "args": ["/path/to/your/enso-mcp/dist/index.js"],
       "env": {
         "MINTLIFY_BASE_URL": "https://docs.enso.build",
         "AI_API_KEY": "your-openai-api-key-here",
@@ -65,7 +104,7 @@ cp .cursor/mcp.json.example .cursor/mcp.json
 
 ### 1. Install Vercel CLI
 ```bash
-bun i -g vercel
+npm i -g vercel
 ```
 
 ### 2. Deploy
@@ -91,7 +130,7 @@ In Vercel Dashboard:
 vercel --prod
 ```
 
-### 5. Configure Cursor with Deployed Server
+### 5. Configure Cursor with Your Deployed Server
 
 After deployment, update your `.cursor/mcp.json`:
 
@@ -99,10 +138,11 @@ After deployment, update your `.cursor/mcp.json`:
 {
   "mcpServers": {
     "enso-docs": {
-      "command": "bunx",
+      "command": "npx",
       "args": [
-        "@modelcontextprotocol/mcp-remote", 
-        "https://your-project-name.vercel.app/mcp"
+        "-y",
+        "@bezata/mcp-remote-client", 
+        "https://your-project-name.vercel.app/api/mcp"
       ]
     }
   }
