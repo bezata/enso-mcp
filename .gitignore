@@ -10,6 +10,7 @@ dist
 coverage
 *.lcov
 mcp
+mcp.json
 # logs
 logs
 _.log
@@ -29,6 +30,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # IntelliJ based IDEs
 .idea
+
+# Cursor configuration (may contain secrets)
+.cursor/mcp.json
 
 # Finder (MacOS) folder config
 .DS_Store
