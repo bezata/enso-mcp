@@ -1,4 +1,14 @@
 import { createHash } from 'crypto';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { glob } from 'glob';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+// Runtime detection
+const isBun = typeof Bun !== 'undefined';
 
 interface CachedContent {
   content: string;
@@ -29,18 +39,39 @@ export class DocumentationCache {
     }
 
     const diskPath = this.getDiskPath(key);
-    const file = Bun.file(diskPath);
     
-    if (await file.exists()) {
-      const stat = await file.stat();
-      if (Date.now() - stat.mtime.getTime() < this.diskTTL) {
-        const content = await file.text();
+    try {
+      let content: string;
+      let mtime: Date;
+      
+      if (isBun) {
+        const file = Bun.file(diskPath);
+        if (await file.exists()) {
+          const stat = await file.stat();
+          mtime = stat.mtime;
+          content = await file.text();
+        } else {
+          return null;
+        }
+      } else {
+        try {
+          const stat = await fs.stat(diskPath);
+          mtime = stat.mtime;
+          content = await fs.readFile(diskPath, 'utf-8');
+        } catch (error) {
+          return null;
+        }
+      }
+      
+      if (Date.now() - mtime.getTime() < this.diskTTL) {
         this.memoryCache.set(key, { 
           content, 
           timestamp: Date.now() 
         });
         return content;
       }
+    } catch (error) {
+      // File doesn't exist or error reading
     }
 
     return null;
@@ -55,7 +86,12 @@ export class DocumentationCache {
 
     await this.ensureCacheDir();
     const diskPath = this.getDiskPath(key);
-    await Bun.write(diskPath, content);
+    
+    if (isBun) {
+      await Bun.write(diskPath, content);
+    } else {
+      await fs.writeFile(diskPath, content, 'utf-8');
+    }
   }
 
   async has(key: string): Promise<boolean> {
@@ -72,8 +108,12 @@ export class DocumentationCache {
     this.memoryCache.clear();
 
     try {
-      const proc = Bun.spawn(["rm", "-rf", this.cacheDir]);
-      await proc.exited;
+      if (isBun) {
+        const proc = Bun.spawn(["rm", "-rf", this.cacheDir]);
+        await proc.exited;
+      } else {
+        await fs.rm(this.cacheDir, { recursive: true, force: true });
+      }
     } catch (error) {
       // Directory doesn't exist
     }
@@ -88,13 +128,24 @@ export class DocumentationCache {
     }
 
     try {
-      const glob = new Bun.Glob("*.cache");
-      for await (const file of glob.scan(this.cacheDir)) {
-        const filePath = `${this.cacheDir}/${file}`;
-        const fileObj = Bun.file(filePath);
-        const stat = await fileObj.stat();
-        if (now - stat.mtime.getTime() > this.diskTTL) {
-          await Bun.$`rm ${filePath}`.quiet();
+      if (isBun) {
+        const globPattern = new Bun.Glob("*.cache");
+        for await (const file of globPattern.scan(this.cacheDir)) {
+          const filePath = `${this.cacheDir}/${file}`;
+          const fileObj = Bun.file(filePath);
+          const stat = await fileObj.stat();
+          if (now - stat.mtime.getTime() > this.diskTTL) {
+            await Bun.$`rm ${filePath}`.quiet();
+          }
+        }
+      } else {
+        const files = await glob('*.cache', { cwd: this.cacheDir });
+        for (const file of files) {
+          const filePath = path.join(this.cacheDir, file);
+          const stat = await fs.stat(filePath);
+          if (now - stat.mtime.getTime() > this.diskTTL) {
+            await fs.unlink(filePath);
+          }
         }
       }
     } catch (error) {
@@ -104,11 +155,19 @@ export class DocumentationCache {
 
   private getDiskPath(key: string): string {
     const hash = createHash('md5').update(key).digest('hex');
-    return `${this.cacheDir}/${hash}.cache`;
+    if (isBun) {
+      return `${this.cacheDir}/${hash}.cache`;
+    } else {
+      return path.join(this.cacheDir, `${hash}.cache`);
+    }
   }
 
   private async ensureCacheDir(): Promise<void> {
-    await Bun.$`mkdir -p ${this.cacheDir}`.quiet();
+    if (isBun) {
+      await Bun.$`mkdir -p ${this.cacheDir}`.quiet();
+    } else {
+      await fs.mkdir(this.cacheDir, { recursive: true });
+    }
   }
 
   async getStats(): Promise<{
@@ -126,13 +185,23 @@ export class DocumentationCache {
     let diskSize = 0;
     
     try {
-      const glob = new Bun.Glob("*.cache");
-      for await (const file of glob.scan(this.cacheDir)) {
-        diskEntries++;
-        const filePath = `${this.cacheDir}/${file}`;
-        const fileObj = Bun.file(filePath);
-        const stat = await fileObj.stat();
-        diskSize += stat.size;
+      if (isBun) {
+        const globPattern = new Bun.Glob("*.cache");
+        for await (const file of globPattern.scan(this.cacheDir)) {
+          diskEntries++;
+          const filePath = `${this.cacheDir}/${file}`;
+          const fileObj = Bun.file(filePath);
+          const stat = await fileObj.stat();
+          diskSize += stat.size;
+        }
+      } else {
+        const files = await glob('*.cache', { cwd: this.cacheDir });
+        for (const file of files) {
+          diskEntries++;
+          const filePath = path.join(this.cacheDir, file);
+          const stat = await fs.stat(filePath);
+          diskSize += stat.size;
+        }
       }
     } catch (error) {
       // Directory doesn't exist
