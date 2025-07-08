@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "enso-docs-local": {
-      "command": "bun",
-      "args": ["run", "/path/to/your/enso-mcp/dist/index.js"],
+      "command": "node",
+      "args": ["/path/to/your/enso-mcp/dist/index.js"],
       "env": {
         "MINTLIFY_BASE_URL": "https://docs.enso.build",
         "AI_API_KEY": "your-openai-api-key-here",

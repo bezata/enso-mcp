@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { spawn } from "child_process";
@@ -7,15 +7,15 @@ async function testMCPServer() {
   console.log("🚀 Starting MCP Server test...\n");
 
   // Spawn the MCP server
-  const serverProcess = spawn("bun", ["src/index.ts"], {
+  const serverProcess = spawn("node", ["--loader", "ts-node/esm", "src/index.ts"], {
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env }
   });
 
   // Create MCP client
   const transport = new StdioClientTransport({
-    command: "bun",
-    args: ["src/index.ts"]
+    command: "node",
+    args: ["--loader", "ts-node/esm", "src/index.ts"]
   });
 
   const client = new Client({
