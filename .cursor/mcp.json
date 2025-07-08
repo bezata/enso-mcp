@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "enso-docs-local": {
+      "command": "bun",
+      "args": ["run", "/Users/behzatcanacele/enso-mcp/dist/index.js"],
+      "env": {
+        "MINTLIFY_BASE_URL": "https://docs.enso.build",
+        "AI_API_KEY": "your-openai-api-key-here",
+        "AI_ENDPOINT": "https://api.openai.com/v1/chat/completions",
+        "AI_MODEL": "gpt-4o"
+      }
+    }
+  }
+}
