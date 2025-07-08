@@ -5,8 +5,8 @@ import { AIService } from '../src/ai-service.js';
 
 const ENSO_DOCS_URL = process.env.MINTLIFY_BASE_URL || "https://docs.enso.build";
 
-// Create instances
-const cache = new DocumentationCache();
+// Create instances with Vercel-compatible cache
+const cache = new DocumentationCache(process.env.VERCEL ? '/tmp/enso-cache' : undefined);
 const docService = new DocumentationService(ENSO_DOCS_URL, cache);
 const aiService = new AIService();
 

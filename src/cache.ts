@@ -28,7 +28,7 @@ export class DocumentationCache {
   private diskTTL: number;
 
   constructor(
-    cacheDir: string = process.env.TMPDIR || '.cache',
+    cacheDir: string = process.env.VERCEL ? '/tmp/enso-cache' : (process.env.TMPDIR || '.cache'),
     memoryTTL: number = 3600000, // 1 hour
     diskTTL: number = 86400000   // 24 hours
   ) {
