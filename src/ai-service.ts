@@ -81,7 +81,15 @@ If you're unsure about something, acknowledge it and suggest where to find more 
       throw new Error(`AI API error (${response.status}): ${errorText}`);
     }
 
-    const data = await response.json() as any;
+    let data: any;
+    const responseText = await response.text();
+    
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', responseText);
+      throw new Error(`Failed to parse AI response: ${parseError}`);
+    }
 
     if (data.choices && data.choices[0]?.message?.content) {
       return {
@@ -94,6 +102,7 @@ If you're unsure about something, acknowledge it and suggest where to find more 
         confidence: data.confidence || 1.0
       };
     } else {
+      console.error('Unexpected AI response structure:', data);
       throw new Error('Unexpected AI API response format');
     }
   }

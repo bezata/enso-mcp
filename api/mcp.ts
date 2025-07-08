@@ -269,23 +269,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 includeContext?: boolean 
               };
               
-              let context = "";
-              if (includeContext !== false) {
-                context = await docService.getRelevantContext(question);
-              }
-              
-              const answer = await aiService.askQuestion(question, context);
-              
-              return res.status(200).json({
-                jsonrpc: "2.0",
-                id,
-                result: {
-                  content: [{
-                    type: "text",
-                    text: answer
-                  }]
+              try {
+                let context = "";
+                if (includeContext !== false) {
+                  context = await docService.getRelevantContext(question);
                 }
-              });
+                
+                const answer = await aiService.askQuestion(question, context);
+                
+                // Ensure the answer is a string and properly escaped
+                const sanitizedAnswer = String(answer).replace(/\r\n/g, '\n');
+                
+                return res.status(200).json({
+                  jsonrpc: "2.0",
+                  id,
+                  result: {
+                    content: [{
+                      type: "text",
+                      text: sanitizedAnswer
+                    }]
+                  }
+                });
+              } catch (error) {
+                // If AI_API_KEY is not set, return a helpful message
+                if (error instanceof Error && error.message.includes('AI_API_KEY')) {
+                  return res.status(200).json({
+                    jsonrpc: "2.0",
+                    id,
+                    result: {
+                      content: [{
+                        type: "text",
+                        text: "AI features require an OpenAI API key. Please set the AI_API_KEY environment variable."
+                      }]
+                    }
+                  });
+                }
+                throw error; // Re-throw other errors
+              }
             }
             
             default:
