@@ -71,26 +71,32 @@ export class DocumentationService {
   }
 
   async getDocumentationPage(path: string): Promise<string> {
-    path = path.replace(/^\//, '');
+    path = path.replace(/^\//, '').toLowerCase();
     
-    const cacheKey = `page:${path}`;
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const response = await fetch(`${this.baseUrl}/${path}.md`);
-    if (!response.ok) {
-      const altResponse = await fetch(`${this.baseUrl}/${path}`);
-      if (!altResponse.ok) {
-        throw new Error(`Documentation page not found: ${path}`);
-      }
-      const content = await altResponse.text();
-      await this.cache.set(cacheKey, content);
+    // For specific documentation pages, extract the relevant section from llms-full.txt
+    const fullDocs = await this.getFullDocumentation();
+    
+    // Try to find the section in the full documentation
+    const sectionRegex = new RegExp(`^#\\s+${path}\\b`, 'im');
+    const sectionMatch = fullDocs.match(sectionRegex);
+    
+    if (sectionMatch) {
+      const startIndex = sectionMatch.index!;
+      // Find the next section (starts with # at beginning of line)
+      const nextSectionMatch = fullDocs.slice(startIndex + sectionMatch[0].length).match(/^#\s+/m);
+      const endIndex = nextSectionMatch ? startIndex + sectionMatch[0].length + nextSectionMatch.index! : fullDocs.length;
+      
+      const content = fullDocs.slice(startIndex, endIndex).trim();
       return content;
     }
-
-    const content = await response.text();
-    await this.cache.set(cacheKey, content);
-    return content;
+    
+    // If not found in sections, search for the path as a keyword
+    const searchResults = await this.searchDocumentation(path, 1);
+    if (searchResults.length > 0) {
+      return `# ${searchResults[0].title}\n\n${searchResults[0].excerpt}`;
+    }
+    
+    throw new Error(`Documentation section not found: ${path}`);
   }
 
   async searchDocumentation(query: string, limit: number = 5): Promise<SearchResult[]> {
