@@ -35,16 +35,26 @@ bun run build
 
 ## Configure in Cursor
 
-Add to your `.cursor/mcp.json`:
+1. Copy the example configuration:
+```bash
+cp .cursor/mcp.json.example .cursor/mcp.json
+```
+
+2. Edit `.cursor/mcp.json` and update:
+   - Replace `/path/to/your/enso-mcp` with your actual path
+   - Add your OpenAI API key
 
 ```json
 {
   "mcpServers": {
-    "enso-docs": {
+    "enso-docs-local": {
       "command": "bun",
-      "args": ["run", "/path/to/enso-mcp/dist/index.js"],
+      "args": ["run", "/path/to/your/enso-mcp/dist/index.js"],
       "env": {
-        "AI_API_KEY": "your-api-key"
+        "MINTLIFY_BASE_URL": "https://docs.enso.build",
+        "AI_API_KEY": "your-openai-api-key-here",
+        "AI_ENDPOINT": "https://api.openai.com/v1/chat/completions",
+        "AI_MODEL": "gpt-4o"
       }
     }
   }
