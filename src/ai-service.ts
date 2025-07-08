@@ -12,9 +12,9 @@ export class AIService {
   private retryDelay: number;
 
   constructor() {
-    this.apiKey = Bun.env.AI_API_KEY || process.env.AI_API_KEY;
-    this.apiEndpoint = Bun.env.AI_ENDPOINT || process.env.AI_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
-    this.model = Bun.env.AI_MODEL || process.env.AI_MODEL || 'gpt-4o';
+    this.apiKey = process.env.AI_API_KEY;
+    this.apiEndpoint = process.env.AI_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
+    this.model = process.env.AI_MODEL || 'gpt-4o';
     this.maxRetries = 3;
     this.retryDelay = 1000;
   }
