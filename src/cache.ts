@@ -7,6 +7,11 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
+// Declare Bun global to avoid TypeScript errors
+declare global {
+  var Bun: any;
+}
+
 // Runtime detection
 const isBun = typeof Bun !== 'undefined';
 
