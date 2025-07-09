@@ -277,8 +277,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 
                 const answer = await aiService.askQuestion(question, context);
                 
-                // Ensure the answer is a string and properly escaped
-                const sanitizedAnswer = String(answer).replace(/\r\n/g, '\n');
+                // Ensure the answer is a string - no additional escaping needed
+                // as res.json() will handle proper JSON serialization
+                const textAnswer = String(answer);
                 
                 return res.status(200).json({
                   jsonrpc: "2.0",
@@ -286,7 +287,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   result: {
                     content: [{
                       type: "text",
-                      text: sanitizedAnswer
+                      text: textAnswer
                     }]
                   }
                 });
